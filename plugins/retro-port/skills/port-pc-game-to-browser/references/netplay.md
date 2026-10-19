@@ -41,6 +41,9 @@ guesses.
   string table, in controller order, so "0xC4 + front foot" = L1 + shot = Shift + S on the keyboard),
   and its controller table (e.g. `controltypes.csv`) gives the button order. Ask a playtester to list
   every key they use and check each one online.
+- **Pause** is the pad's Start button, so map the game's keyboard pause key (usually Esc) to Start, not
+  to B. One static map can't give a key two meanings (Esc = back in menus, pause in a match), so keep a
+  separate back key (Backspace). In fullscreen the browser takes Esc to leave fullscreen.
 
 ## Frame time
 
