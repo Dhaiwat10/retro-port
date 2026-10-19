@@ -180,8 +180,12 @@ for (let i = 1; i <= 12; i++) HID['F' + i] = 57 + i;
 for (let i = 1; i <= 9; i++) HID['Numpad' + i] = 88 + i;
 
 // Netplay: the keyboard drives this player's pad (the game itself gets no keys or mouse, which would desync).
+// Online the keyboard drives the player's virtual pad, so this map must cover every key the game's own
+// keyboard controls use, modifiers included: map each to the pad button the game uses for the same action
+// (see netplay.md, "Inputs"). Shift -> LB (L1) is Cricket 07's lofted-shot modifier.
 const NET_KEYS = {   // KeyboardEvent.code -> standard-gamepad bit
   Enter: 0, Space: 0, KeyS: 0, Escape: 1, Backspace: 1, KeyD: 1, KeyA: 2, KeyW: 3, KeyQ: 4, KeyE: 5,
+  ShiftLeft: 4, ShiftRight: 4,
   Digit1: 6, Digit3: 7, Tab: 8, KeyP: 9, ArrowUp: 12, ArrowDown: 13, ArrowLeft: 14, ArrowRight: 15,
 };
 let netKeyBits = 0;

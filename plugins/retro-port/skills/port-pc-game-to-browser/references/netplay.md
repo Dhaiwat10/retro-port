@@ -34,6 +34,13 @@ guesses.
   more often the slower the game ran.
 - The keyboard is mapped onto the player's pad in online mode (the `NET_KEYS` table in `port.js`);
   the mouse is off. Raw keys would reach only one machine and desync the other.
+- **Keep that map complete.** A key the game uses in solo play but missing from `NET_KEYS` silently does
+  nothing online. Cricket 07's lofted shots are Shift + a shot key, and Shift wasn't mapped, so players
+  couldn't hit sixes online. To find the pad button for a keyboard action, read the game's own help:
+  its tutorial and control texts usually show button icons (Cricket 07: icon codes 0xC0-0xCF in the
+  string table, in controller order, so "0xC4 + front foot" = L1 + shot = Shift + S on the keyboard),
+  and its controller table (e.g. `controltypes.csv`) gives the button order. Ask a playtester to list
+  every key they use and check each one online.
 
 ## Frame time
 
