@@ -68,6 +68,10 @@ plugins/retro-port/skills/port-pc-game-to-browser/
   template/         the toolchain: x86→C translator, runtime, Windows layer, WebGPU renderer, page
 ```
 
+## License
+
+MIT (see `LICENSE`). Games you port remain their publishers' property.
+
 ## Credits
 
 Built by [Dhaiwat10](https://github.com/Dhaiwat10) from the Cricket 07 browser port, and by
