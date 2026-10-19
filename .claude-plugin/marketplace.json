@@ -1,0 +1,11 @@
+{
+  "name": "retro-port",
+  "owner": { "name": "Dhaiwat10" },
+  "plugins": [
+    {
+      "name": "retro-port",
+      "source": "./plugins/retro-port",
+      "description": "Port old 32-bit Windows PC games you own to the browser: static recompilation to WebAssembly, a Windows/Direct3D 8 layer, WebGPU, and optional online 1v1."
+    }
+  ]
+}

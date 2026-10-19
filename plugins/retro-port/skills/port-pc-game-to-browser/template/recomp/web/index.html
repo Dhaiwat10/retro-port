@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game</title>
+<style>
+  :root {
+    --bg: #070b08; --fg: #eef4ef; --muted: #9fb3a5; --faint: #6f8576;
+    --accent: #34b866; --accent-hi: #45cf79;
+    --card: rgba(255, 255, 255, .055); --card-hi: rgba(255, 255, 255, .09); --line: rgba(255, 255, 255, .12);
+    --field: rgba(0, 0, 0, .28); --radius: 14px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { min-height: 100%; display: grid; place-items: center; padding: 16px; }
+  #stage { position: relative; width: min(100%, calc((100vh - 32px) * 4 / 3)); aspect-ratio: 4 / 3; background: #000;
+    border-radius: 12px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .55); }
+  canvas { width: 100%; height: 100%; display: block; cursor: none; }
+  .hidden { display: none !important; }
+
+  /* the launcher: a floodlit pitch behind the menus */
+  #panel { position: absolute; inset: 0; overflow: auto; display: grid; place-items: center; padding: 28px;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(255, 255, 255, .10), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 9%, transparent 9% 18%),
+      radial-gradient(140% 120% at 50% 110%, #123d22 0%, #0b2414 45%, #060d08 100%); }
+  .view { width: min(100%, 560px); text-align: center; animation: rise .25s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .view { animation: none; } }
+
+  .brand { display: inline-flex; align-items: center; gap: 12px; margin: 0 0 6px; }
+  .brand h1 { margin: 0; font-size: clamp(30px, 5.2vw, 46px); font-weight: 800; letter-spacing: .04em; line-height: 1; }
+  .brand svg { width: clamp(30px, 5.2vw, 46px); height: clamp(30px, 5.2vw, 46px); color: var(--accent); flex: none; }
+  .tagline { margin: 0 0 26px; color: var(--muted); }
+  .small { font-size: 13px; color: var(--faint); }
+  p { margin: 8px 0; }
+
+  /* home: the two big choices */
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 520px) { .choices { grid-template-columns: 1fr; } }
+  .choices.single { grid-template-columns: minmax(0, 300px); justify-content: center; }
+  .choice { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 18px; text-align: left;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--fg); font: inherit;
+    cursor: pointer; transition: transform .12s ease, background .12s ease, border-color .12s ease; }
+  .choice:hover { transform: translateY(-2px); background: var(--card-hi); border-color: rgba(255, 255, 255, .22); }
+  .choice:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+  .choice svg { width: 30px; height: 30px; color: var(--accent); }
+  .choice b { font-size: 18px; }
+  .choice span { color: var(--muted); font-size: 14px; }
+
+  /* buttons and fields */
+  button { font: inherit; cursor: pointer; border-radius: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border: 0;
+    background: var(--accent); color: #04110a; font-weight: 700; transition: background .12s ease; }
+  .btn:hover { background: var(--accent-hi); }
+  .btn:disabled { opacity: .45; cursor: default; background: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); font-weight: 600; }
+  .btn.ghost:hover { background: var(--card-hi); }
+  .back { position: absolute; top: 16px; left: 16px; padding: 6px 12px; border: 0; background: transparent; color: var(--muted); }
+  .back:hover { color: var(--fg); }
+  input, select { font: inherit; color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; min-width: 0; }
+  input::placeholder { color: var(--faint); }
+  label.field { display: grid; gap: 6px; text-align: left; font-size: 13px; color: var(--muted); }
+
+  .card { padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); text-align: left; }
+  .card h2 { margin: 0 0 4px; font-size: 16px; }
+  .stack { display: grid; gap: 14px; }
+  .row { display: flex; gap: 10px; }
+  .row > input { flex: 1; }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 13px; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  #np-code { text-transform: uppercase; letter-spacing: .15em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  details { margin-top: 12px; color: var(--muted); font-size: 13px; }
+  details summary { cursor: pointer; width: fit-content; }
+  details label { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  details select { flex: 1; padding: 7px 10px; }
+  .msg { min-height: 1.5em; color: #f2b8a8; font-size: 14px; }
+
+  /* lobby */
+  .code { font: 800 clamp(30px, 6vw, 42px)/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .18em; margin: 6px 0 2px; }
+  .players { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .players li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--field); text-align: left; }
+  .players li.empty { color: var(--faint); border: 1px dashed var(--line); background: transparent; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 700;
+    background: #1d5a33; color: #d8f5e2; }
+  .players .who { flex: 1; min-width: 0; }
+  .players .who b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .players .who small { color: var(--faint); }
+  .tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px;
+    background: var(--card-hi); color: var(--muted); }
+  .spinner { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line);
+    border-top-color: var(--accent); animation: spin .9s linear infinite; vertical-align: -1px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+
+  /* loading */
+  progress { width: min(100%, 320px); height: 8px; margin-top: 14px; appearance: none; border: 0; border-radius: 99px;
+    overflow: hidden; background: var(--field); }
+  progress::-webkit-progress-bar { background: var(--field); }
+  progress::-webkit-progress-value { background: var(--accent); border-radius: 99px; }
+  progress::-moz-progress-bar { background: var(--accent); }
+  #status { font-variant-numeric: tabular-nums; color: var(--muted); max-width: 52ch; margin-inline: auto; }
+
+  /* fullscreen: the stage fills the screen and the game letterboxes itself inside the canvas */
+  #stage:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; box-shadow: none; }
+  #stage:-webkit-full-screen { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; }
+  #fs { position: absolute; right: 12px; bottom: 12px; z-index: 2; width: 40px; height: 40px; display: grid; place-items: center;
+    padding: 0; border: 1px solid rgba(255, 255, 255, .18); border-radius: 10px; background: rgba(0, 0, 0, .55); color: #fff;
+    backdrop-filter: blur(4px); opacity: 0; transition: opacity .25s ease; }
+  #fs svg { width: 20px; height: 20px; }
+  #stage.awake #fs, #fs:focus-visible { opacity: 1; }
+  #fs:hover { background: rgba(0, 0, 0, .75); }
+  #fstip { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2; padding: 6px 14px; border-radius: 99px;
+    background: rgba(0, 0, 0, .65); color: #fff; font-size: 13px; pointer-events: none; transition: opacity .4s ease; }
+  kbd { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; padding: 1px 6px; border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); }
+  #netstatus { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 99px; background: rgba(0, 0, 0, .6);
+    color: #fff; font: 12px/1.5 ui-sans-serif, system-ui, sans-serif; pointer-events: none; backdrop-filter: blur(4px); }
+  #netstatus.bad { background: rgba(170, 20, 20, .88); }
+</style>
+</head>
+<body>
+<main>
+  <div id="stage">
+    <canvas id="canvas" width="1024" height="768" tabindex="0"></canvas>
+    <div id="netstatus" class="hidden"></div>
+    <button id="fs" title="Fullscreen (Alt+Enter)" aria-label="Toggle fullscreen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path id="fs-icon" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+    <div id="fstip" class="hidden">Press <kbd>Alt</kbd> + <kbd>Enter</kbd> for fullscreen</div>
+    <div id="panel">
+
+      <!-- loading: browser checks, the first-visit download, errors -->
+      <section id="view-loading" class="view">
+        <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h4M8 9v4"/><circle cx="15.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="17.5" cy="12.5" r=".6" fill="currentColor"/><path d="M7 6h10a5 5 0 0 1 4.9 6l-.8 4a2.6 2.6 0 0 1-4.5 1.2L14.8 15H9.2l-1.8 2.2A2.6 2.6 0 0 1 2.9 16l-.8-4A5 5 0 0 1 7 6z"/></svg><h1 class="game-name"></h1></div>
+        <p id="status">Checking your browser…</p>
+        <progress id="progress" class="hidden" max="1" value="0"></progress>
+        <div>
+          <label id="pick" class="btn hidden" style="margin-top:16px">Choose game folder
+            <input id="folder" type="file" webkitdirectory multiple hidden>
+          </label>
+        </div>
+        <p id="help" class="hidden small">Pick the folder that holds <b>Data</b>, <b>Audio</b> and the game's executable. It is copied
+          into this browser's private storage once and never leaves your computer.</p>
+      </section>
+
+      <!-- home: solo or online -->
+      <section id="view-home" class="view hidden">
+        <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h4M8 9v4"/><circle cx="15.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="17.5" cy="12.5" r=".6" fill="currentColor"/><path d="M7 6h10a5 5 0 0 1 4.9 6l-.8 4a2.6 2.6 0 0 1-4.5 1.2L14.8 15H9.2l-1.8 2.2A2.6 2.6 0 0 1 2.9 16l-.8-4A5 5 0 0 1 7 6z"/></svg><h1 class="game-name"></h1></div>
+        <p class="tagline">Pick how you want to play.</p>
+        <div class="choices">
+          <button id="play" class="choice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.5 3.5l6 6-9.5 9.5-3 .5-3.5-3.5.5-3z"/><path d="M4.5 19.5L3 21"/><circle cx="18.5" cy="18.5" r="2"/></svg>
+            <b>Play Solo</b>
+            <span>Offline, on this device.</span>
+          </button>
+          <button id="go-online" class="choice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 19c.7-3 2.9-5 5.5-5s4.8 2 5.5 5"/><path d="M13.5 14.6c.8-.4 1.6-.6 2.5-.6 2.6 0 4.8 2 5.5 5"/></svg>
+            <b>Play Multiplayer</b>
+            <span>Online 1v1 with a friend, wherever they are.</span>
+          </button>
+        </div>
+        <p class="small" style="margin-top:22px"><span id="controls"></span><br>
+          Fullscreen: <kbd>Alt</kbd> + <kbd>Enter</kbd> (<kbd>⌥</kbd> + <kbd>Enter</kbd> on Mac) or the button in the corner.</p>
+      </section>
+
+      <!-- multiplayer: host or join -->
+      <section id="view-online" class="view hidden">
+        <button class="back" data-go="home">← Back</button>
+        <div class="stack">
+          <div>
+            <h2 style="margin:0;font-size:24px">Play Multiplayer</h2>
+            <p class="small" style="margin:4px 0 0">Online 1v1. Each player needs a controller or the keyboard.</p>
+          </div>
+          <label class="field">Your name
+            <input id="np-name" placeholder="Player" maxlength="24" autocomplete="nickname">
+          </label>
+          <div class="card">
+            <h2>Host a game</h2>
+            <p class="small" style="margin:0 0 12px">Get a room code to send to your friend.</p>
+            <button id="np-host" class="btn" style="width:100%">Create room</button>
+            <details>
+              <summary>Server location</summary>
+              <label>Room server
+                <select id="np-region">
+                  <option value="auto" selected>Nearest to me</option><option value="weur">Western Europe</option>
+                  <option value="eeur">Eastern Europe</option><option value="enam">Eastern North America</option>
+                  <option value="wnam">Western North America</option><option value="sam">South America</option>
+                  <option value="apac">Asia-Pacific</option><option value="apac-ne">Northeast Asia</option>
+                  <option value="apac-se">Southeast Asia</option><option value="oc">Oceania</option>
+                </select>
+              </label>
+              <p class="small" style="margin:8px 0 0">For friends in another country, a server between you is fairest.</p>
+            </details>
+          </div>
+          <div class="or">or</div>
+          <div class="card">
+            <h2>Join a game</h2>
+            <p class="small" style="margin:0 0 12px">Enter the code your friend sent you.</p>
+            <div class="row">
+              <input id="np-code" placeholder="ROOM CODE" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false">
+              <button id="np-join" class="btn ghost">Join</button>
+            </div>
+          </div>
+          <p id="np-msg" class="msg"></p>
+        </div>
+      </section>
+
+      <!-- lobby: room code, players, start -->
+      <section id="view-lobby" class="view hidden">
+        <button id="np-leave" class="back">← Leave room</button>
+        <div class="stack">
+          <div>
+            <p class="small" style="margin:0">Room code</p>
+            <div class="code" id="np-room"></div>
+            <p class="small" style="margin:0"><span id="np-colo"></span></p>
+            <button id="np-copy" class="btn ghost" style="margin-top:12px">Copy invite link</button>
+            <span id="invite" class="hidden"></span>
+          </div>
+          <ul class="players" id="np-players"></ul>
+          <div id="np-hostctl" class="hidden">
+            <button id="np-start" class="btn" style="width:100%">Start match</button>
+            <details>
+              <summary>Input delay</summary>
+              <label>Delay
+                <select id="np-delay">
+                  <option value="auto" selected>Auto</option><option value="4">4 frames (67 ms)</option>
+                  <option value="6">6 frames (100 ms)</option><option value="9">9 frames (150 ms)</option>
+                  <option value="12">12 frames (200 ms)</option><option value="18">18 frames (300 ms)</option>
+                </select>
+              </label>
+              <p class="small" style="margin:8px 0 0">Auto picks the lowest delay your connection allows. Higher is smoother on a bad link.</p>
+            </details>
+          </div>
+          <p id="np-wait" class="hidden small"><span class="spinner"></span>Waiting for the host to start.</p>
+          <p id="np-lobbymsg" class="msg"></p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+<script src="port-config.js"></script>
+<script src="netplay.js"></script>
+<script src="port.js"></script>
+</body>
+</html>

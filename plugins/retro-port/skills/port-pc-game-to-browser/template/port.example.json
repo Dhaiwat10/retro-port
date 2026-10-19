@@ -1,0 +1,19 @@
+{
+  "name": "Example Game",
+  "id": "example-game",
+  "exe": "Game.exe",
+  "guest_exe": "Game.exe",
+  "guest_root": "C:\\Games\\ExampleGame",
+  "volume_label": "EXAMPLEGAME",
+  "files": {
+    "include": [],
+    "required": []
+  },
+  "registry": [
+    { "key": "SOFTWARE\\Example Publisher\\Example Game", "value": "InstallDir", "sz": "C:\\Games\\ExampleGame" },
+    { "key": "SOFTWARE\\Example Publisher\\Example Game", "value": "Language", "sz": "English" }
+  ],
+  "pad": { "name": "Logitech Dual Action USB", "vid": "046D", "pid": "C216" },
+  "online": false,
+  "controls": "Use a controller or the keyboard."
+}

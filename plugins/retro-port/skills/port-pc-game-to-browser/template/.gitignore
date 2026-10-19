@@ -1,0 +1,28 @@
+# This folder is a port of a commercial game. Everything below is the game itself or derived from it:
+# never commit it to a public repository or share it.
+game/
+re/ghidra/
+re/*.csv
+re/*.log
+re/decomp/
+recomp/data/functions.json
+recomp/out_all/
+recomp/out_trace/
+extracted/
+dist/
+userdata/
+
+# regenerable outputs and local tooling
+recomp/build/
+recomp/build_web/
+recomp/host/port_config.h
+recomp/web/port-config.js
+recomp/tests/results/
+third_party/
+.venv/
+__pycache__/
+.DS_Store
+*.log
+.dev.vars
+.wrangler/
+recomp/web/cloudflare/.live-upload-token

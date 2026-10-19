@@ -1,0 +1,7 @@
+{
+  "name": "retro-port",
+  "version": "0.1.0",
+  "description": "Port old 32-bit Windows PC games you own to the browser: static recompilation to WebAssembly, a Windows/Direct3D 8 layer, WebGPU, and optional online 1v1.",
+  "author": { "name": "Dhaiwat10" },
+  "keywords": ["games", "retro", "webassembly", "recompilation", "browser", "netplay"]
+}

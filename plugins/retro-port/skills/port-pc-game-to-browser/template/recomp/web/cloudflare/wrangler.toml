@@ -1,0 +1,18 @@
+# Cloudflare Worker for the browser build (see worker.js and README.md in this folder).
+name = "game-web"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "game-web"
+
+# Netplay rooms (worker.js: NetplayRoom)
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "NetplayRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["NetplayRoom"]
