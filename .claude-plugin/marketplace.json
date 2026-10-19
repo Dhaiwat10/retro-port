@@ -1,6 +1,9 @@
 {
   "name": "retro-port",
-  "owner": { "name": "Dhaiwat10" },
+  "description": "Skills for bringing old PC games you own to the browser.",
+  "owner": {
+    "name": "Dhaiwat10"
+  },
   "plugins": [
     {
       "name": "retro-port",
